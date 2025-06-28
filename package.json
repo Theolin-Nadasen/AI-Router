@@ -1,0 +1,17 @@
+{
+  "name": "ai-router",
+  "version": "1.0.0",
+  "description": "A router for different ai",
+  "license": "MIT",
+  "author": "Theolin Nadasen",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "start": "nodemon index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "express": "^5.1.0",
+    "nodemon": "^3.1.10"
+  }
+}

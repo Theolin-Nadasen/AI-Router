@@ -34,6 +34,7 @@ app.get("/models", async (req, res) => {
     const freeOnly = req.headers["free"]
     const idOnly = req.headers["onlyID"]
 
+
     const response = await fetch("https://openrouter.ai/api/v1/models", {
         headers: {
             "Authorization": `Bearer ${process.env.OPENROUTER_API_KEY}`
@@ -41,15 +42,19 @@ app.get("/models", async (req, res) => {
     })
 
     const data = await response.json()
+    let models = []
 
-    const models = data.data
+    if (freeOnly) {
+        // Filter for free models (pricing.prompt = "0")
+        models = data.data.filter(model =>
+            model.pricing.prompt === "0" || model.pricing.prompt === 0
+        )
+    } else {
+        models = data.data
+    }
 
-    // Filter for free models (pricing.prompt = "0")
-    const freeModels = data.data.filter(model =>
-        model.pricing.prompt === "0" || model.pricing.prompt === 0
-    )
-
-    const modelids = freeModels.map((model) => model.id)
+    // continue working from here tomorrow. need another if statement for onlyID
+    const modelids = models.map((model) => model.id)
 
     res.send(modelids)
 })

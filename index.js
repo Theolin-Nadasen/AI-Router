@@ -108,6 +108,8 @@ app.get("/models", async (req, res) => {
 
 app.listen(3000)
 
+export default app
+
 // const {text} = await generateText({
 //     model: client(model),
 //     prompt: "hi",

@@ -1,7 +1,10 @@
 import express from "express"
 import { generateText } from "ai"
 import { openrouter, createOpenRouter } from "@openrouter/ai-sdk-provider"
+import NodeCache from "node-cache"
 import "dotenv/config"
+
+const modelsCache = new NodeCache({stdTTL: 500})
 
 const client = createOpenRouter({ apiKey: process.env.apiKey })
 
@@ -38,23 +41,29 @@ app.get("/models", async (req, res) => {
 
 
     try {
-        const response = await fetch("https://openrouter.ai/api/v1/models", {
-            headers: {
-                "Authorization": `Bearer ${process.env.OPENROUTER_API_KEY}`
-            }
-        })
+        let models = modelsCache.get("models")
 
-        const data = await response.json()
-        let models = []
+        if(!models){
+            console.log("fetching data")
+            const response = await fetch("https://openrouter.ai/api/v1/models", {
+                headers: {
+                    "Authorization": `Bearer ${process.env.OPENROUTER_API_KEY}`
+                }
+            })
+    
+            const data = await response.json()
+            models = data.data
+
+            modelsCache.set("models", models)
+        }
+
 
         if (freeOnly) {
             // Filter for free models (pricing.prompt = "0")
             console.log("free")
-            models = data.data.filter(model =>
+            models = models.filter(model =>
                 model.pricing.prompt === "0" || model.pricing.prompt === 0
             )
-        } else {
-            models = data.data
         }
 
 

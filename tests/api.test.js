@@ -32,7 +32,9 @@ describe('AI Router API', () => {
         expect(response.status).toBe(200);
         expect(Array.isArray(response.body)).toBe(true);
         if (response.body.length > 0) {
-            expect(typeof response.body[0]).toBe('string');
+            response.body.forEach(id => {
+                expect(typeof id).toBe("string");
+            });
         }
     });
 });

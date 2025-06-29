@@ -2,6 +2,7 @@ import express from "express"
 import { generateText } from "ai"
 import { openrouter, createOpenRouter } from "@openrouter/ai-sdk-provider"
 import NodeCache from "node-cache"
+import cors from "cors"
 import "dotenv/config"
 
 const modelsCache = new NodeCache({stdTTL: 500})
@@ -9,6 +10,7 @@ const modelsCache = new NodeCache({stdTTL: 500})
 const client = createOpenRouter({ apiKey: process.env.apiKey })
 
 const app = express()
+app.use(cors())
 
 app.get("/", async (req, res) => {
     const prompt = req.headers['prompt']

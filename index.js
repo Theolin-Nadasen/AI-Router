@@ -31,8 +31,10 @@ app.get("/", async (req, res) => {
 })
 
 app.get("/models", async (req, res) => {
-    const freeOnly = req.headers["free"]
-    const idOnly = req.headers["onlyID"]
+    const freeOnly = req.headers["free"] === "true"
+    const idOnly = req.headers["only-id"] === "true"
+    const inputModality = req.headers["input-type"]
+    const outputModality = req.headers["output-type"]
 
 
     const response = await fetch("https://openrouter.ai/api/v1/models", {
@@ -46,6 +48,7 @@ app.get("/models", async (req, res) => {
 
     if (freeOnly) {
         // Filter for free models (pricing.prompt = "0")
+        console.log("free")
         models = data.data.filter(model =>
             model.pricing.prompt === "0" || model.pricing.prompt === 0
         )
@@ -53,10 +56,45 @@ app.get("/models", async (req, res) => {
         models = data.data
     }
 
-    // continue working from here tomorrow. need another if statement for onlyID
-    const modelids = models.map((model) => model.id)
 
-    res.send(modelids)
+    // filter for input type
+    if (inputModality) {
+        const requiredModalities = inputModality.split(",").map(m => m.trim());
+
+        models = models.filter(model => {
+            const modelModalities = model.architecture.input_modalities;
+            return requiredModalities.every(required =>
+                modelModalities.includes(required)
+            );
+        });
+    }
+
+    // filter for output type. openrouter only has text output models :C
+    if (outputModality) {
+        console.log("input model: ", outputModality)
+        models = models.filter(model => {
+            const modalities = model.architecture.output_modalities;
+
+            if (outputModality === "text") {
+                return modalities.includes("text");
+            } else if (outputModality === "image") {
+                return modalities.includes("image");
+            } else if (outputModality === "both") {
+                return modalities.includes("text") && modalities.includes("image");
+            }
+
+            return true;
+        });
+    }
+
+
+    // filter for only id
+    if (idOnly) {
+        console.log("only id")
+        models = models.map((model) => model.id)
+    }
+
+    res.send(models)
 })
 
 app.listen(3000)

@@ -12,6 +12,11 @@ instructions to use:
 
 these are the available headers:
 ```
+/
+model: model id     // to use a specific model
+prompt: YOUR_MESSAGE    // required
+
+/models
 free : true     // only returns free models
 only-id : true  // only gives model ids
 input-type: text    // can be text or image or file or a comma separated list eg text,image

@@ -37,64 +37,73 @@ app.get("/models", async (req, res) => {
     const outputModality = req.headers["output-type"]
 
 
-    const response = await fetch("https://openrouter.ai/api/v1/models", {
-        headers: {
-            "Authorization": `Bearer ${process.env.OPENROUTER_API_KEY}`
-        }
-    })
-
-    const data = await response.json()
-    let models = []
-
-    if (freeOnly) {
-        // Filter for free models (pricing.prompt = "0")
-        console.log("free")
-        models = data.data.filter(model =>
-            model.pricing.prompt === "0" || model.pricing.prompt === 0
-        )
-    } else {
-        models = data.data
-    }
-
-
-    // filter for input type
-    if (inputModality) {
-        const requiredModalities = inputModality.split(",").map(m => m.trim());
-
-        models = models.filter(model => {
-            const modelModalities = model.architecture.input_modalities;
-            return requiredModalities.every(required =>
-                modelModalities.includes(required)
-            );
-        });
-    }
-
-    // filter for output type. openrouter only has text output models :C
-    if (outputModality) {
-        console.log("input model: ", outputModality)
-        models = models.filter(model => {
-            const modalities = model.architecture.output_modalities;
-
-            if (outputModality === "text") {
-                return modalities.includes("text");
-            } else if (outputModality === "image") {
-                return modalities.includes("image");
-            } else if (outputModality === "both") {
-                return modalities.includes("text") && modalities.includes("image");
+    try {
+        const response = await fetch("https://openrouter.ai/api/v1/models", {
+            headers: {
+                "Authorization": `Bearer ${process.env.OPENROUTER_API_KEY}`
             }
+        })
 
-            return true;
-        });
+        const data = await response.json()
+        let models = []
+
+        if (freeOnly) {
+            // Filter for free models (pricing.prompt = "0")
+            console.log("free")
+            models = data.data.filter(model =>
+                model.pricing.prompt === "0" || model.pricing.prompt === 0
+            )
+        } else {
+            models = data.data
+        }
+
+
+        // filter for input type
+        if (inputModality) {
+            const requiredModalities = inputModality.split(",").map(m => m.trim());
+
+            models = models.filter(model => {
+                const modelModalities = model.architecture.input_modalities;
+                return requiredModalities.every(required =>
+                    modelModalities.includes(required)
+                );
+            });
+        }
+
+        // filter for output type. openrouter only has text output models :C
+        if (outputModality) {
+            console.log("input model: ", outputModality)
+            models = models.filter(model => {
+                const modalities = model.architecture.output_modalities;
+
+                if (outputModality === "text") {
+                    return modalities.includes("text");
+                } else if (outputModality === "image") {
+                    return modalities.includes("image");
+                } else if (outputModality === "both") {
+                    return modalities.includes("text") && modalities.includes("image");
+                }
+
+                return true;
+            });
+        }
+
+
+        // filter for only id
+        if (idOnly) {
+            console.log("only id")
+            models = models.map((model) => model.id)
+        }
+
+        res.send(models)
+
+    } catch (error) {
+        console.error(`Model filtering error: ${error}`)
+        res.status(500).json({
+            error: "failed to fetch or filter models",
+            details: error.message
+        })
     }
-
-
-    // filter for only id
-    if (idOnly) {
-        console.log("only id")
-        models = models.map((model) => model.id)
-    }
-
-    res.send(models)
 })
 
 app.listen(3000)
